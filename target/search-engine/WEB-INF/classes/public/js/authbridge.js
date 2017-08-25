@@ -883,6 +883,7 @@ function paintTable(caseDetails){
 		var pfather = $("<td>").html(caseDetail.partyFather);
 		var padd = $("<td>").html(caseDetail.partyAddress);
 		var pcaseid = $("<td>").html(caseDetail.caseId);
+		var link = $("<td>").html('<a href="http://172.16.16.13/APIl2html/njdghtml.php?case_id='+caseDetail.caseId+'" target="_blank">Link</a>');
 		//var pscore = $("<td>").html(caseDetail.score);
 		var fper = $("<td>").html(caseDetail.fatherPercentage);
 		var pweight = $("<td>").html(caseDetail.weightedPercentage);
@@ -891,7 +892,7 @@ function paintTable(caseDetails){
 		var pnamper = $("<td>").html(caseDetail.bothMatchPercentage);
 		
 		
-		tr.append(rank).append(pid).append(pname).append(pfather).append(padd).append(pcaseid).append(fper)
+		tr.append(rank).append(pid).append(pname).append(pfather).append(padd).append(pcaseid).append(link).append(fper)
 									.append(pnmper).append(pamper).append(pnamper).append(pweight);
 		$('table > tbody').append(tr);
 	}

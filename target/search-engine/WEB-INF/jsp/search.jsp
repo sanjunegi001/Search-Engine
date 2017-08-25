@@ -164,6 +164,7 @@
 											<th>Father Name</th>
 											<th class="address">Address</th>
 											<th>Case Id</th>
+											<th>Link</th>
 											<c:choose>
 												<c:when test="${sortFiledparam eq 'fatherMatch'}">
 													<c:choose>
