@@ -630,7 +630,7 @@ public class FetchingDataServiceImpl implements FetchingDataService {
 				if(listOfObject.get(0) instanceof CaseDetailDTO) {
 					List<CaseDetailDTO> listOfCaseDetailDTO = (List<CaseDetailDTO>)data;
 					for(CaseDetailDTO caseDetailDTO : listOfCaseDetailDTO) {
-						addCheckId(checkId, caseDetailDTO.getPartyId());
+						addCheckId(checkId, caseDetailDTO.getPartyId(),caseDetailDTO.getRank());
 					}
 				}
 			}
@@ -642,11 +642,12 @@ public class FetchingDataServiceImpl implements FetchingDataService {
 	 * @param checkId
 	 * @param integer
 	 */
-	private void addCheckId(Integer checkId, Integer integer) {
+	private void addCheckId(Integer checkId, Integer partyId,Integer rank) {
 					
 			CheckIdPartyIdMapper checkIdPartyIdMapper = new CheckIdPartyIdMapper();
-			checkIdPartyIdMapper.setPartyId(integer);
+			checkIdPartyIdMapper.setPartyId(partyId);
 			checkIdPartyIdMapper.setCheckId(checkId);
+			checkIdPartyIdMapper.setRank(rank);
 			checkPartyMappingService.setCheckPartyMapping(checkIdPartyIdMapper);
 		
 	}

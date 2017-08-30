@@ -21,6 +21,9 @@ public class CheckIdPartyIdMapper {
 	private Integer partyId;
 	@Column(name = "status_matched")
 	private Integer statusMatched;
+	@Column(name = "rank")
+	private Integer rank;
+
 	public Integer getCheckId() {
 		return checkId;
 	}
@@ -40,9 +43,17 @@ public class CheckIdPartyIdMapper {
 	public void setStatusMatched(Integer statusMatched) {
 		this.statusMatched = statusMatched;
 	}
+	public Integer getRank() {
+		return rank;
+	}
+	public void setRank(Integer rank) {
+		this.rank = rank;
+	}
 	@Override
 	public String toString() {
-		return "CheckIdPartyIdMapper [checkId=" + checkId + ", partyId=" + partyId + "]";
+		return "CheckIdPartyIdMapper [checkId=" + checkId + ", partyId=" + partyId + ", statusMatched=" + statusMatched
+				+ ", rank=" + rank + "]";
 	}
+	
 	
 }
