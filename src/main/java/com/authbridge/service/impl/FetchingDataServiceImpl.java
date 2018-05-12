@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import com.authbridge.DTO.CalcScoreInputDTO;
 import com.authbridge.DTO.CalcWeightageInputDTO;
 import com.authbridge.DTO.CaseDetailDTO;
+import com.authbridge.DTO.ManageResourceResponse;
 import com.authbridge.DTO.MatchedStatusUpdateDTO;
 import com.authbridge.DTO.SearchCaseDetailDTO;
 import com.authbridge.DTO.SearchResultDTO;
@@ -33,7 +34,6 @@ import com.authbridge.DTO.WeightageDTO;
 import com.authbridge.config.ABStringUtil;
 import com.authbridge.constant.AUTHBRIDGECONSTANT;
 import com.authbridge.model.CheckIdPartyIdMapper;
-import com.authbridge.model.Modification;
 import com.authbridge.service.CheckPartyMappingService;
 import com.authbridge.service.ConfigService;
 import com.authbridge.service.FetchingDataService;
@@ -81,7 +81,7 @@ public class FetchingDataServiceImpl implements FetchingDataService {
 	private String collection;
 
 	@Override
-	public SearchResultDTO getAllResults() throws Exception {
+	public SearchResultDTO getAllResults() throws Exception {	
 		return this.getAllResults(null);
 	}
 
@@ -121,6 +121,7 @@ public class FetchingDataServiceImpl implements FetchingDataService {
 				queryBuilder.append(" addr:").append(addressWord.trim());
 			}
 		}
+		
 
 		String fatherName = null;
 		if (!utility.checkEmpty(searchCaseDetailDTO.getFatherName())) {
@@ -157,7 +158,7 @@ public class FetchingDataServiceImpl implements FetchingDataService {
 		try {
 			long startTime = System.currentTimeMillis();
 			LOG.trace("Time while hitting the solr server: {}", startTime);
-
+			LOG.info("sanjaynegi::"+query);
 			response = solr.query(query);
 			SolrDocumentList results = response.getResults();
 
@@ -302,6 +303,7 @@ public class FetchingDataServiceImpl implements FetchingDataService {
 			String partyname = solrDocument.get("partyname") != null 
 							? String.valueOf(solrDocument.get("partyname")) 
 							: null;
+			
 			String resultName = solrDocument.get("cleaned_name") != null
 							? String.valueOf(solrDocument.get("cleaned_name"))
 							: null;
@@ -320,7 +322,7 @@ public class FetchingDataServiceImpl implements FetchingDataService {
 			Integer resDistrictId = solrDocument.get("address_district_id") != null
 							? Integer.valueOf(solrDocument.get("address_district_id").toString())
 							: null;
-
+			
 			CaseDetailDTO caseDetails = new CaseDetailDTO();
 			caseDetails.setPartyId(Integer.valueOf(solrDocument.get("id").toString()));
 			caseDetails.setCaseId(solrDocument.get("case_id") != null
@@ -353,6 +355,8 @@ public class FetchingDataServiceImpl implements FetchingDataService {
 			resultAddress = ABStringUtil.removeMatch(resultAddress, 
 						configService.getAddressStopwords());
 			String encodedResAddr = doubleMetaphoneEncode(resultAddress, true);
+			System.out.println("re  "+resultAddress);
+			System.out.println("en  "+encodedResAddr);
 			caseDetails.setAddressMatchPercentage(Double.valueOf(compareStrings(
 								encodedQryAddr, encodedResAddr)));
 
@@ -555,6 +559,7 @@ public class FetchingDataServiceImpl implements FetchingDataService {
 					(nameAddrWeightedPercent / nameAddrWeightage) 
 					* (nameAddrWeightage + weightageMissingFields)
 				) + ftrWeightedPercent + stateWeightedPercent + distWeightedPercent;
+		
 		return utility.roundTwoDecimals(weightedPercent);
 	}
 
@@ -672,4 +677,168 @@ public class FetchingDataServiceImpl implements FetchingDataService {
 		checkPartyMappingService.setCheckPartyMapping(checkIdPartyIdMapper);
 	}
 	
+	
+	public SearchResultDTO getAllResultsDemo(SearchCaseDetailDTO searchCaseDetailDTO,ManageResourceResponse manageResourceResponse) throws Exception {
+		
+		if (searchCaseDetailDTO == null || utility.checkEmpty(searchCaseDetailDTO.getName())
+				|| utility.checkEmpty(searchCaseDetailDTO.getAddress())) {
+			throw new Exception("Name and Address Mandatory");
+		}
+		
+//	HttpSolrClient solr = new HttpSolrClient(solrURL);
+		
+		CloudSolrClient solr = new CloudSolrClient(zkHostString);
+		solr.setDefaultCollection(collection);
+		solr.connect();
+		
+		SolrQuery query = null;
+		query = new SolrQuery();
+		query.setRequestHandler("/select");
+		
+		String name = searchCaseDetailDTO.getName().toLowerCase().trim();
+		
+		String address = searchCaseDetailDTO.getAddress().toLowerCase();
+		address = ABStringUtil.removeMatch(address, configService.getAddressStopwords());
+		address = ABStringUtil.clean(address);
+		
+		address = address.replace("  ", " ").trim();
+		
+		// build a query of the format: <name> addr:<address word 1> addr:<address word 2> ...
+		StringBuilder queryBuilder = new StringBuilder(name);
+		
+		String [] addressWords = address.split(" ");
+		for(String addressWord: addressWords) {
+			if(addressWord != null && addressWord.trim().length() >= 2) {
+				queryBuilder.append(" addr:").append(addressWord.trim());
+			}
+		}
+		
+		
+		String fatherName = null;
+		if (!utility.checkEmpty(searchCaseDetailDTO.getFatherName())) {
+			fatherName = ABStringUtil.removeDigits(searchCaseDetailDTO.getFatherName());
+			fatherName = ABStringUtil.removeMatch(fatherName, configService.getNameStopwords());
+			fatherName = ABStringUtil.clean(fatherName).trim();
+			
+			queryBuilder.append(" father:").append(fatherName);
+			query.set("f.father.qf", "partyfather");
+			LOG.info("Father's name entered by the user." + fatherName);
+		} else {
+			// do nothing
+			LOG.info("Father's name not entered by the user.");
+		}
+		
+		Integer stateId=null;
+		if(!utility.checkEmpty(searchCaseDetailDTO.getStateId())) {
+			stateId=searchCaseDetailDTO.getStateId();
+			queryBuilder.append(" address_state_id:").append(stateId);
+			LOG.info("State id entered by the user " + stateId);
+		} else {
+			// do nothing
+			LOG.info("State id not entered by the user.");
+		}
+		Integer districtId=null;
+		if(!utility.checkEmpty(searchCaseDetailDTO.getDistrictId())) {
+			districtId=searchCaseDetailDTO.getDistrictId();
+			queryBuilder.append(" address_district_id:").append(districtId);
+			LOG.info("District id entered by the user " + districtId);
+		} else {
+			// do nothing
+			LOG.info("District id not entered by the user.");
+		}
+		
+		
+		query.setQuery(queryBuilder.toString());
+		LOG.info("Searching SOLR with name: " + name + "and address:"
+				+ address);
+		LOG.info("Solr Query:->" + query.getQuery());
+		
+		query.setRows(100);
+		
+		query.setFields("id", "partyname", "partyfather", "case_id", "address",
+				"cleaned_address","cleaned_name","alias_name","address_district_id","address_state_id", "score", "maxScore");
+		query.set("defType", "edismax");
+		query.set("qf", "cleaned_name alias_name");
+		query.set("f.addr.qf", "cleaned_address");
+		query.set("mm",1);
+		QueryResponse response;
+		List<CaseDetailDTO> search = new ArrayList<CaseDetailDTO>();
+		
+		SearchResultDTO searchResultDTO = new SearchResultDTO();
+		
+		try {
+			long startTime = System.currentTimeMillis();
+			LOG.trace("Time while hitting the solr server: {}", startTime);
+			
+			response = solr.query(query);
+			SolrDocumentList results = response.getResults();
+			
+			long resultsReceivedAt = System.currentTimeMillis();
+			LOG.debug("Result size: {} with max score: {}. Time taken to fetch results: {}ms.",
+					results.size(), results.getMaxScore(), (resultsReceivedAt - startTime));
+			
+			CalcScoreInputDTO calcScoreInputDTO = new CalcScoreInputDTO.Builder(name, address)
+					.withFatherName(fatherName).withStateId(searchCaseDetailDTO.getStateId())
+					.withDistrictId(searchCaseDetailDTO.getDistrictId())
+					.withNameThreshold(searchCaseDetailDTO.getNameThreshold())
+					.withAddrThreshold(searchCaseDetailDTO.getAddrThreshold())
+					.build();
+			search = calculateScore(results, calcScoreInputDTO);
+			
+			LOG.trace("Time taken for calculating score : {}ms", 
+					(System.currentTimeMillis() - resultsReceivedAt));
+			
+			// based upon given sort field, sort in descending order
+			if (!utility.checkEmpty(searchCaseDetailDTO.getSortField())) {
+				String sortField = searchCaseDetailDTO.getSortField();
+				if (sortField.equals(AUTHBRIDGECONSTANT.SORT_FIELD.NAME_MATCH)) {
+					Collections.sort(search, CaseDetailDTO.NAME_MATCH);
+				}
+				if (sortField
+						.equals(AUTHBRIDGECONSTANT.SORT_FIELD.ADDRESS_MATCH)) {
+					Collections.sort(search, CaseDetailDTO.ADDRESS_MATCH);
+				}
+				if (sortField.equals(AUTHBRIDGECONSTANT.SORT_FIELD.BOTH_MATCH)) {
+					Collections.sort(search, CaseDetailDTO.NAME_ADDRESS_MATCH);
+				}
+				if (sortField
+						.equals(AUTHBRIDGECONSTANT.SORT_FIELD.WEIGHT_MATCH)) {
+					Collections.sort(search, CaseDetailDTO.WEIGHT_MATCH);
+				}
+				if (sortField
+						.equals(AUTHBRIDGECONSTANT.SORT_FIELD.FATHER_MATCH)) {
+					Collections.sort(search, CaseDetailDTO.FATHER_MATCH);
+				}
+			}
+			Collections.reverse(search);
+			
+			int size = 1000;
+			if(search.size() < 1000){
+				size=search.size();
+			}
+			List<CaseDetailDTO> searchResult = search.subList(0, size);
+			for(int i = 0; i < size; i++) {
+				searchResult.get(i).setRank(Integer.valueOf(i + 1));
+			}
+			
+			searchResultDTO.setData(searchResult);
+			searchResultDTO.setTotalResult(searchResult.size());
+			searchResultDTO.setNumFound(Long.valueOf(searchResult.size()));
+			searchResultDTO.setMaxScore(results.getMaxScore());
+			searchResultDTO.setStart(results.getStart());
+			LOG.info("Search completed.!Closing solr connection.!");
+			solr.close();
+		} catch (SolrServerException e) {
+			LOG.info("solr server connection exception");
+		} catch (IOException e) {
+			LOG.info("IO  exception");
+			e.printStackTrace();
+		} finally {
+			solr.close();
+		}
+		LOG.info("Setting the results after all calculations..");
+		return searchResultDTO;
+	}
+	
 }
+

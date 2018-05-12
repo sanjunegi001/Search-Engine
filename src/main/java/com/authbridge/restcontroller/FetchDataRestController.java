@@ -8,14 +8,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.authbridge.DTO.ManageResourceResponse;
 import com.authbridge.DTO.MatchedStatusUpdateDTO;
 import com.authbridge.DTO.SearchCaseDetailDTO;
 import com.authbridge.DTO.SearchResultDTO;
 import com.authbridge.DTO.WeightageDTO;
 import com.authbridge.constant.AUTHBRIDGECONSTANT;
+import com.authbridge.service.AbbreviationStopwordService;
 import com.authbridge.service.FetchingDataService;
 import com.authbridge.service.ModificationService;
 import com.authbridge.service.SchedulingService;
@@ -38,6 +39,9 @@ public class FetchDataRestController {
 	
 	@Autowired
 	private ModificationService modificationService;
+	
+	@Autowired
+	private AbbreviationStopwordService abbreviationStopwordService;
 
 	/**
 	 * To get the search results by sending the necessary params set in searchCaseDetailDTO
@@ -102,11 +106,12 @@ public class FetchDataRestController {
 		//SearchCaseDetailDTO searchCaseDetailDTO = new SearchCaseDetailDTO();
 		//searchCaseDetailDTO.setName(name);
 		//searchCaseDetailDTO.setAddress(addr);
+		ManageResourceResponse manageResourceResponse =	abbreviationStopwordService.getAliases();
 		RestControllerResponse response = new RestControllerResponse();
 		response.setCode(AUTHBRIDGECONSTANT.REST.SUCCESS_CODE);
 		response.setStatus(AUTHBRIDGECONSTANT.REST.SUCCESS);
 		response.setCheckId(searchCaseDetailDTO.getCheckId());
-		response.setData(fetchingDataService.getAllResults(searchCaseDetailDTO));
+		response.setData(fetchingDataService.getAllResultsDemo(searchCaseDetailDTO,manageResourceResponse));
 		fetchingDataService.recordCheckIDMappings(searchCaseDetailDTO.getCheckId(), ((SearchResultDTO)response.getData()).getData());
 		return response;
 	}

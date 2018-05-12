@@ -3,6 +3,7 @@ package com.authbridge.service;
 import java.util.List;
 import java.util.Map;
 
+import com.authbridge.DTO.ManageResourceResponse;
 import com.authbridge.DTO.MatchedStatusUpdateDTO;
 import com.authbridge.DTO.SearchCaseDetailDTO;
 import com.authbridge.DTO.SearchResultDTO;
@@ -16,6 +17,7 @@ public interface FetchingDataService {
 	public SearchResultDTO getAllResults() throws Exception;
 	
 	public SearchResultDTO getAllResults(SearchCaseDetailDTO searchCaseDetailDTO) throws Exception;
+	public SearchResultDTO getAllResultsDemo(SearchCaseDetailDTO searchCaseDetailDTO,ManageResourceResponse manageResourceResponse) throws Exception;
 
 	public Object getAutoComplete(String name);
 	

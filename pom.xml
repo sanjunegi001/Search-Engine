@@ -2,10 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.authbridge</groupId>
+	<groupId>com.authbridge</groupId>
 	<artifactId>search-engine</artifactId>
 	<version>0.1.0</version>
 	<packaging>war</packaging>
+	
+	
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -74,12 +76,13 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 		</dependency>
 
-		<!-- http://mvnrepository.com/artifact/org.apache.solr/solr-solrj -->
-		<dependency>
-			<groupId>org.apache.solr</groupId>
-			<artifactId>solr-solrj</artifactId>
-			<version>6.0.1</version>
-		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.solr/solr-solrj -->
+			<dependency>
+    			<groupId>org.apache.solr</groupId>
+    			<artifactId>solr-solrj</artifactId>
+    			<version>6.0.1</version>
+			</dependency>
+
 		<!-- http://mvnrepository.com/artifact/org.springframework.data/spring-data-solr -->
 		<dependency>
 			<groupId>org.springframework.data</groupId>
@@ -150,6 +153,8 @@
 			<url>https://repo.spring.io/libs-release</url>
 		</pluginRepository>
 	</pluginRepositories>
+
+
 
 </project>
 

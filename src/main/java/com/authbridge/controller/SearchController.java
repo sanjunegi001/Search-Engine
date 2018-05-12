@@ -8,8 +8,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.authbridge.DTO.ManageResourceResponse;
 import com.authbridge.DTO.SearchCaseDetailDTO;
 import com.authbridge.DTO.SearchResultDTO;
+import com.authbridge.service.AbbreviationStopwordService;
 import com.authbridge.service.FetchingDataService;
 import com.authbridge.service.SearchService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,6 +29,9 @@ public class SearchController {
 	
 	@Autowired
 	private FetchingDataService fetchingDataService;
+	
+	@Autowired
+	private AbbreviationStopwordService abbreviationStopwordService;
 
 	@Autowired
 	private SearchService searchService;
@@ -44,8 +49,10 @@ public class SearchController {
 		LOG.debug("Entering search controller, with parameters: {}", searchCaseDetailDTO);
 
 		SearchResultDTO searchResultDTO = null;
+		
 		try {
 			searchResultDTO = fetchingDataService.getAllResults(searchCaseDetailDTO);
+		
 		} catch (Exception e) {
 			LOG.error("Solr exception", e);
 		}
@@ -56,6 +63,28 @@ public class SearchController {
 		try {
 			String searchResultDTOString = mapper.writeValueAsString(searchResultDTO);
 			model.addAttribute("searchResultDTO",searchResultDTOString);
+		} catch (JsonProcessingException e) {
+			LOG.error("Json parse exception", e);
+		}
+		
+		
+		// search with state id and district id
+		SearchResultDTO searchResultDTODemo = null;
+		ManageResourceResponse manageResourceResponse =	abbreviationStopwordService.getAliases();
+
+		try {
+			searchResultDTODemo = fetchingDataService.getAllResultsDemo(searchCaseDetailDTO,manageResourceResponse);
+			
+		} catch (Exception e) {
+			LOG.error("Solr exception", e);
+		}
+		searchResultDTODemo.setPerPage(perpage);
+		searchResultDTODemo.setPerPaginQuery(numberOfRows);
+
+		ObjectMapper mapper2 = new ObjectMapper();
+		try {
+			String searchResultDTOString2 = mapper2.writeValueAsString(searchResultDTODemo);
+			model.addAttribute("searchResultDTODemo",searchResultDTOString2);
 		} catch (JsonProcessingException e) {
 			LOG.error("Json parse exception", e);
 		}

@@ -47,6 +47,14 @@ public class Utility {
 		return false;
 	}
 	
+	public boolean checkEmpty(Integer value){
+		if(value==null)
+			return true;
+		if(value==0)
+			return true;
+		return false;
+	}
+	
 	/**
      * Calculates the similarity (a number within 0 and 1) between two strings.
      */
